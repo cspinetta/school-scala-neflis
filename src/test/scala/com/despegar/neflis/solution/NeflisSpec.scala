@@ -1,19 +1,19 @@
 package com.despegar.neflis.solution
 
-import com.despegar.neflis.solution.NeflisData.{estrellaThings, film}
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.{FlatSpec, Matchers}
 
-class NeflisSpec extends FunSuite with Matchers {
+class NeflisSpec extends FlatSpec with Matchers {
 
-
-  test("userHasSeen") {
+  "User pepe" should "have seen estrella things" in new NeflisData {
     val pepe = User(Set(film), estrellaThings.seasons.flatMap(_.episodes).toSet)
     val hasSeen = Neflis.userHasSeen(pepe, estrellaThings)
     assert(hasSeen, "User should have seen estrella things")
   }
+
 }
 
-object NeflisData {
+//Fixture
+trait NeflisData {
   val genre = "SciFi"
   val actors = List("Millie Bobby Brown")
   val defaultEpisode = Episode(60, 1, genre, actors, Nil)
