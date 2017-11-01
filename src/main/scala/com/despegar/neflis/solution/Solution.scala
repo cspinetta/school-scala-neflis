@@ -33,9 +33,9 @@ case class Season(episodes: List[Episode], number: Int, protagonists: List[Strin
   lazy val lastEpisode: Option[Episode] = episodes.sortWith(_.order > _.order).headOption
 }
 
-case class Episode(duration: Int, order: Int, genre: String, protagonists: List[String], invitedActors: List[String]) extends Content
+case class Episode(duration: Int, order: Int, genre: String, protagonists: List[String], invitedActors: List[String]) extends Content with Watchable
 
-case class Film(title: String, duration: Int, protagonists: List[String], genre: String) extends Content
+case class Film(title: String, duration: Int, protagonists: List[String], genre: String) extends Content with Watchable
 
 sealed trait Content {
   def genre: String
@@ -43,18 +43,24 @@ sealed trait Content {
   def protagonists: List[String]
 }
 
-case class User(films: Set[Film], episodes: Set[Episode])
+sealed trait Watchable extends Content
+
+case class User(watchedContents: Set[Watchable])
 
 object Neflis {
 
   // Point 1: check if this [user] has seen this [content]
   def userHasSeen(user: User, content: Content): Boolean = content match {
     case Series(seasons, _, _) =>
-      val shouldSee = seasons.flatMap(_.episodes)
-      shouldSee.forall(user.episodes.contains)
-    case Season(episodes, _, _, _) => episodes.forall(user.episodes.contains)
-    case episode: Episode => user.episodes.contains(episode)
-    case film: Film => user.films.contains(film)
+      seasons
+        .flatMap(_.episodes)
+        .forall(user.watchedContents.contains)
+    case Season(episodes, _, _, _) =>
+      episodes
+        .forall(user.watchedContents.contains)
+    case watchable: Watchable =>
+      user.watchedContents
+        .contains(watchable)
   }
 
   // Point 2: Duration for a content
@@ -79,21 +85,21 @@ object Neflis {
   // Point 4: some asks to user
   // Point 4.a: all genres seen by a user
   def genresSeenByUser(user: User): Set[String] = {
-    user.episodes.map(_.genre) ++ user.films.map(_.genre)
+    user.watchedContents.map(_.genre)
   }
 
   // Point 4.b: favorite genre seen by a user
   def favoriteGenreByUser(user: User): Option[String] = {
 
     @scala.annotation.tailrec
-    def computeGenreSeen(contents: List[Content], accumulated: Map[String, Int]): Map[String, Int] = contents match {
-      case content :: otherContents =>
-        val newAcc = accumulated + (content.genre -> (accumulated.getOrElse(content.genre, 0) + content.duration))
-        computeGenreSeen(otherContents, newAcc)
+    def computeGenreSeen(watchables: List[Watchable], accumulated: Map[String, Int]): Map[String, Int] = watchables match {
+      case watchable :: otherWatchable =>
+        val newAcc = accumulated + (watchable.genre -> (accumulated.getOrElse(watchable.genre, 0) + watchable.duration))
+        computeGenreSeen(otherWatchable, newAcc)
       case Nil => accumulated
     }
 
-    val genresSeenMap = computeGenreSeen((user.films ++ user.episodes).toList, Map.empty[String, Int])
+    val genresSeenMap = computeGenreSeen(user.watchedContents.toList, Map.empty[String, Int])
 
     genresSeenMap.toList.sortWith(_._2 > _._2).headOption.map(_._1)
   }
@@ -102,7 +108,7 @@ object Neflis {
   def actorHasActedOn(actor: String, content: Content): Boolean = content.protagonists.contains(actor)
 
   // Point 5.b: actor has acted on a given content
-  def userIsAFanOf(user: User, actor: String): Boolean = (user.films ++ user.episodes).forall(_.protagonists.contains(actor))
+  def userIsAFanOf(user: User, actor: String): Boolean = (user.watchedContents).forall(_.protagonists.contains(actor))
 
   // Point 6: Add a new episode
   def addEpisode(series: Series, season: Season, episode: Episode): Either[String, Series] = series.addEpisode(season, episode)
@@ -117,7 +123,7 @@ object Neflis {
 //      Los documentales que duran más de 2 horas son 20 puntos.
 //      Los capítulos de terror que duran menos de 15 minutos son 15 puntos.
 //      El resto del contenido suma 0 puntos.
-    val scoreList = (user.films ++ user.episodes) map {
+    val scoreList = user.watchedContents map {
       case Film("Volver al Futuro", _, _, _) => 150
       case x: Content if x.protagonists.size == 1 && x.protagonists.contains("Morgan Freeman") => 100
       case Film(_, _, protagonists, _) if protagonists.contains("Jack Nicholson") => 80

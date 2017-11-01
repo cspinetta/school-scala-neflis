@@ -5,37 +5,37 @@ import org.scalatest.{FlatSpec, Matchers}
 class NeflisSpec extends FlatSpec with Matchers {
 
   "User pepe" should "have seen estrella things - Series" in new NeflisData {
-    val pepe = User(Set(thor), estrellaThings.seasons.flatMap(_.episodes).toSet)
+    val pepe = User(Set(thor) ++ estrellaThings.seasons.flatMap(_.episodes).toSet)
     val hasSeen = Neflis.userHasSeen(pepe, estrellaThings)
     hasSeen shouldBe true
   }
 
   "User pepa" should "have not seen all episodes of estrella things - Series" in new NeflisData {
-    val pepa = User(Set(thor), estrellaThings.seasons.head.episodes.toSet)
+    val pepa = User(Set(thor) ++ estrellaThings.seasons.head.episodes.toSet)
     val hasSeen = Neflis.userHasSeen(pepa, estrellaThings)
     hasSeen shouldBe false
   }
 
   "User pepi" should "have seen Thor - Film" in new NeflisData {
-    val pepi = User(Set(thor), Set())
+    val pepi = User(Set(thor))
     val hasSeen = Neflis.userHasSeen(pepi, thor)
     hasSeen shouldBe true
   }
 
   "User pepo" should "have seen episode one of estrella things - Episode" in new NeflisData {
-    val pepo = User(Set(thor), estrellaThings.seasons.head.episodes.toSet)
+    val pepo = User(Set(thor) ++ estrellaThings.seasons.head.episodes.toSet)
     val hasSeen = Neflis.userHasSeen(pepo, season1.episodes.head)
     hasSeen shouldBe true
   }
 
   "User pepo's brother" should "have seen season two of estrella things - Season" in new NeflisData {
-    val pepon = User(Set(thor), estrellaThings.seasons.flatMap(_.episodes).toSet)
+    val pepon = User(Set(thor) ++ estrellaThings.seasons.flatMap(_.episodes).toSet)
     val hasSeen = Neflis.userHasSeen(pepon, season2)
     hasSeen shouldBe true
   }
 
   "User pepu" should "is too busy to watch any content - Film and Series" in new NeflisData {
-    val pepu = User(Set(), Set())
+    val pepu = User(Set())
     val (hasSeenFilm, hasSeenSeries) = (Neflis.userHasSeen(pepu, thor), Neflis.userHasSeen(pepu, estrellaThings))
     hasSeenFilm shouldBe false
     hasSeenSeries shouldBe false
