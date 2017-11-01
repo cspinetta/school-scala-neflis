@@ -1,12 +1,12 @@
 package com.despegar.neflis.solution
 
-case class Series(seasons: List[Season], genre: String, protagonistActors: List[String]) extends Content {
+case class Series(seasons: List[Season], genre: String, protagonists: List[String]) extends Content {
   lazy val duration: Int = seasons.map(_.duration).sum
 
   def addEpisode(season: Season, episode: Episode): Either[String, Series] = {
     def addEpisode(season: Season, episode: Episode): Season = season.copy(episodes = season.episodes :+ episode)
     def replaceSeason(season: Season, newSeason: Season): Series = {
-      this.copy(seasons = this.seasons.filter(_ == season) :+ newSeason)
+      this.copy(seasons = this.seasons.filterNot(_ == season) :+ newSeason)
     }
 
     this
@@ -26,21 +26,21 @@ case class Series(seasons: List[Season], genre: String, protagonistActors: List[
   }
 }
 
-case class Season(episodes: List[Episode], number: Int, protagonistActors: List[String], genre: String) extends Content {
+case class Season(episodes: List[Episode], number: Int, protagonists: List[String], genre: String) extends Content {
   lazy val countEpisodes: Int = episodes.size
   lazy val duration: Int = episodes.map(_.duration).sum
 
   lazy val lastEpisode: Option[Episode] = episodes.sortWith(_.order > _.order).headOption
 }
 
-case class Episode(duration: Int, order: Int, genre: String, protagonistActors: List[String], invitedActors: List[String]) extends Content
+case class Episode(duration: Int, order: Int, genre: String, protagonists: List[String], invitedActors: List[String]) extends Content
 
-case class Film(title: String, duration: Int, protagonistActors: List[String], genre: String) extends Content
+case class Film(title: String, duration: Int, protagonists: List[String], genre: String) extends Content
 
 sealed trait Content {
   def genre: String
   def duration: Int
-  def protagonistActors: List[String]
+  def protagonists: List[String]
 }
 
 case class User(films: Set[Film], episodes: Set[Episode])
@@ -99,10 +99,10 @@ object Neflis {
   }
 
   // Point 5.a: actor has acted on a given content
-  def actorHasActedOn(actor: String, content: Content): Boolean = content.protagonistActors.contains(actor)
+  def actorHasActedOn(actor: String, content: Content): Boolean = content.protagonists.contains(actor)
 
   // Point 5.b: actor has acted on a given content
-  def userIsAFanOf(user: User, actor: String): Boolean = (user.films ++ user.episodes).forall(_.protagonistActors.contains(actor))
+  def userIsAFanOf(user: User, actor: String): Boolean = (user.films ++ user.episodes).forall(_.protagonists.contains(actor))
 
   // Point 6: Add a new episode
   def addEpisode(series: Series, season: Season, episode: Episode): Either[String, Series] = series.addEpisode(season, episode)
@@ -119,7 +119,7 @@ object Neflis {
 //      El resto del contenido suma 0 puntos.
     val scoreList = (user.films ++ user.episodes) map {
       case Film("Volver al Futuro", _, _, _) => 150
-      case x: Content if x.protagonistActors.size == 1 && x.protagonistActors.contains("Morgan Freeman") => 100
+      case x: Content if x.protagonists.size == 1 && x.protagonists.contains("Morgan Freeman") => 100
       case Film(_, _, protagonists, _) if protagonists.contains("Jack Nicholson") => 80
       case Episode(_, _, _, protagonists, inviteds) if inviteds.size > protagonists.size => 80
       case x: Content if x.genre.equalsIgnoreCase("comedia") => 50
