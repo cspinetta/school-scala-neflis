@@ -43,17 +43,17 @@ class NeflisSpec extends FlatSpec with Matchers {
 
   "The series duration" should "be calculated by adding the duration of all of them episodes" in new NeflisData {
     val seriesDuration = Neflis.durationFor(estrellaThings)
-    assert(seriesDuration == 300)
+    assert(seriesDuration == 298)
   }
 
   "The film duration" should "be calculated by itself duration" in new NeflisData {
-    val filmDuration = Neflis.durationFor(film)
+    val filmDuration = Neflis.durationFor(thor)
     assert(filmDuration == 130)
   }
 
   "A series" should "resolve the last episode correctly" in new NeflisData {
     val lastEpisode = Neflis.lastEpisodeFor(estrellaThings)
-    lastEpisode shouldBe Some(defaultEpisode.copy(order = 2))
+    lastEpisode shouldBe Some(defaultEpisode.copy(order = 2, duration = 59))
   }
 
 }
