@@ -92,10 +92,10 @@ object Neflis {
   def favoriteGenreByUser(user: User): Option[String] = {
 
     @scala.annotation.tailrec
-    def computeGenreSeen(watchables: List[Watchable], accumulated: Map[String, Int]): Map[String, Int] = watchables match {
-      case watchable :: otherWatchable =>
-        val newAcc = accumulated + (watchable.genre -> (accumulated.getOrElse(watchable.genre, 0) + watchable.duration))
-        computeGenreSeen(otherWatchable, newAcc)
+    def computeGenreSeen(watchedLists: List[Watchable], accumulated: Map[String, Int]): Map[String, Int] = watchedLists match {
+      case watched :: othersWatched =>
+        val newAcc = accumulated + (watched.genre -> (accumulated.getOrElse(watched.genre, 0) + watched.duration))
+        computeGenreSeen(othersWatched, newAcc)
       case Nil => accumulated
     }
 
@@ -108,7 +108,7 @@ object Neflis {
   def actorHasActedOn(actor: String, content: Content): Boolean = content.protagonists.contains(actor)
 
   // Point 5.b: actor has acted on a given content
-  def userIsAFanOf(user: User, actor: String): Boolean = (user.watchedContents).forall(_.protagonists.contains(actor))
+  def userIsAFanOf(user: User, actor: String): Boolean = user.watchedContents.forall(_.protagonists.contains(actor))
 
   // Point 6: Add a new episode
   def addEpisode(series: Series, season: Season, episode: Episode): Either[String, Series] = series.addEpisode(season, episode)

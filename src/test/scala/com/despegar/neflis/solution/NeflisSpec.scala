@@ -43,18 +43,32 @@ class NeflisSpec extends FlatSpec with Matchers {
 
   "The series duration" should "be calculated by adding the duration of all of them episodes" in new NeflisData {
     val seriesDuration = Neflis.durationFor(estrellaThings)
-    assert(seriesDuration == 298)
+    seriesDuration shouldBe 298
   }
 
   "The film duration" should "be calculated by itself duration" in new NeflisData {
     val filmDuration = Neflis.durationFor(thor)
-    assert(filmDuration == 130)
+    filmDuration shouldBe 130
   }
 
   "A series" should "resolve the last episode correctly" in new NeflisData {
     val lastEpisode = Neflis.lastEpisodeFor(estrellaThings)
     lastEpisode shouldBe Some(defaultEpisode.copy(order = 2, duration = 59))
   }
+
+  "Neflis" should "resolve well the genres seen by a user" in new NeflisData {
+    val pepo = User(Set(thor) ++ estrellaThings.seasons.head.episodes.toSet)
+    val genres = Neflis.genresSeenByUser(pepo)
+    genres should contain only ("SciFi", "Action")
+  }
+
+  "The favorite genre of a user" should "be the most seen by duration" in new NeflisData {
+    val pepo = User(Set(thor) ++ estrellaThings.seasons.head.episodes.toSet)
+    val favoriteGenre = Neflis.favoriteGenreByUser(pepo)
+    favoriteGenre shouldBe Some("SciFi")
+  }
+
+
 
 }
 
